@@ -8,11 +8,11 @@ SECRET_KEY = os.getenv("SECRET_KEY", "fallback-for-dev")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
 
-# tokenUrl «ü¦V§Ú­Ìªºµn¤JºİÂI
+# tokenUrl æŒ‡å‘æˆ‘å€‘çš„ç™»å…¥ç«¯é»
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/google")
 
 def create_access_token(data: dict):
-    """«Ø¥ß JWT Access Token"""
+    """å»ºç«‹ JWT Access Token"""
     to_encode = data.copy()
     expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
@@ -20,19 +20,19 @@ def create_access_token(data: dict):
 
 def get_current_user_email(token: str = Depends(oauth2_scheme)) -> str:
     """
-    ¸ÑªR JWT ¨Ã¦^¶Ç¨Ï¥ÎªÌ email
-    - ¥Î©ó¨ü«OÅ@¸ô¥Ñªº¨Ì¿àª`¤J
-    - ¦Û°Ê±q Authorization: Bearer <token> ¨ú±o token
+    è§£æ JWT ä¸¦å›å‚³ä½¿ç”¨è€… email
+    - ç”¨æ–¼å—ä¿è­·è·¯ç”±çš„ä¾è³´æ³¨å…¥
+    - è‡ªå‹•å¾ Authorization: Bearer <token> å–å¾— token
     """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="µLªkÅçÃÒ¾ÌÃÒ",
+        detail="ç„¡æ³•é©—è­‰æ†‘è­‰",
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        # ¸Ñ½X JWT
+        # è§£ç¢¼ JWT
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        # ¨ú±o subject (§Ú­Ì¦s©ñ email ªºÄæ¦ì)
+        # å–å¾— subject (æˆ‘å€‘å­˜æ”¾ email çš„æ¬„ä½)
         email: str = payload.get("sub")
         if email is None:
             raise credentials_exception
