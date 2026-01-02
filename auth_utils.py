@@ -1,31 +1,39 @@
 import os
 from datetime import datetime, timedelta
-from jose import jwt,JWTError
-from fastapi import Depends,HTTPException,status
+from jose import jwt, JWTError
+from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 
 SECRET_KEY = os.getenv("SECRET_KEY", "fallback-for-dev")
-ALGORITHM = "HS256"
-ACCESS_TOCKEN_EXPIRE_MINUTES=60
+ALGORITHM = os.getenv("ALGORITHM", "HS256")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
 
+# tokenUrl «ü¦V§Ú­Ìªºµn¤JºÝÂI
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/google")
 
 def create_access_token(data: dict):
+    """«Ø¥ß JWT Access Token"""
     to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOCKEN_EXPIRE_MINUTES)
+    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-def get_current_user_email(token: str=Depends(oauth2_scheme))->str:
-    # è§£æž JWT ä¸¦å›žå‚³ email çš„é‚è¼¯...
-    pass
-
-    credentials_exception=HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
-                                        detail="ç„¡æ³•é©—è­‰æ†‘è­‰",headers={"www-Authenticate":"Bearer"},                                   
-                                        )
+def get_current_user_email(token: str = Depends(oauth2_scheme)) -> str:
+    """
+    ¸ÑªR JWT ¨Ã¦^¶Ç¨Ï¥ÎªÌ email
+    - ¥Î©ó¨ü«OÅ@¸ô¥Ñªº¨Ì¿àª`¤J
+    - ¦Û°Ê±q Authorization: Bearer <token> ¨ú±o token
+    """
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="µLªkÅçÃÒ¾ÌÃÒ",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
     try:
-        payload=jwt.decode(token,SECRET_KEY,algorithms=[ALGORITHM])
-        email:str=payload.get("sub")
+        # ¸Ñ½X JWT
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        # ¨ú±o subject (§Ú­Ì¦s©ñ email ªºÄæ¦ì)
+        email: str = payload.get("sub")
         if email is None:
             raise credentials_exception
         return email
