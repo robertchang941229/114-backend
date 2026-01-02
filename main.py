@@ -6,49 +6,49 @@ from pydantic import BaseModel
 from google_oauth import verify_google_id_token, exchange_code_for_tokens
 from auth_utils import create_access_token, get_current_user_email
 
-app = FastAPI(title="¸ê¤u¨t 114-Backend ¥Ü½d±M®×")
+app = FastAPI(title="è³‡å·¥ç³» 114-Backend ç¤ºç¯„å°ˆæ¡ˆ")
 
-# ©w¸q«eºİ¶Ç¤Jªº¸ê®Æ®æ¦¡
+# å®šç¾©å‰ç«¯å‚³å…¥çš„è³‡æ–™æ ¼å¼
 class TokenRequest(BaseModel):
-    """[¬[ºc B] «eºİª½±µ¶Ç id_token"""
+    """[æ¶æ§‹ B] å‰ç«¯ç›´æ¥å‚³ id_token"""
     id_token: str
 
 
 class CodeRequest(BaseModel):
-    """[¬[ºc A] «eºİ¶Ç authorization code¡A«áºİ­t³d´« token"""
+    """[æ¶æ§‹ A] å‰ç«¯å‚³ authorization codeï¼Œå¾Œç«¯è² è²¬æ› token"""
     code: str
-    redirect_uri: str  # ¥²¶·»P«eºİ¾É¦V Google ®É¨Ï¥Îªº¤@­P
+    redirect_uri: str  # å¿…é ˆèˆ‡å‰ç«¯å°å‘ Google æ™‚ä½¿ç”¨çš„ä¸€è‡´
 
 
 # ============================================================
-# ¬[ºc A: Authorization Code Flow
-# - «eºİ¥u¶Ç code¡A«áºİ¥Î code + secret ´« token
-# - ¸û¦w¥ş¡A¾A¦X¦³«áºİªººô¯¸
+# æ¶æ§‹ A: Authorization Code Flow
+# - å‰ç«¯åªå‚³ codeï¼Œå¾Œç«¯ç”¨ code + secret æ› token
+# - è¼ƒå®‰å…¨ï¼Œé©åˆæœ‰å¾Œç«¯çš„ç¶²ç«™
 # ============================================================
-@app.post("/auth/google/code", summary="[¬[ºcA] ¥Î Code ´«¨ú JWT")
+@app.post("/auth/google/code", summary="[æ¶æ§‹A] ç”¨ Code æ›å– JWT")
 async def google_auth_with_code(request: CodeRequest):
     """
-    ±µ¦¬«eºİ¶Ç¨Óªº authorization code¡A«áºİ­t³d¡G
-    1. ¥Î code + client_secret ¦V Google ´«¨ú tokens
-    2. ÅçÃÒ id_token
-    3. µo©ñ¦Û®a JWT
+    æ¥æ”¶å‰ç«¯å‚³ä¾†çš„ authorization codeï¼Œå¾Œç«¯è² è²¬ï¼š
+    1. ç”¨ code + client_secret å‘ Google æ›å– tokens
+    2. é©—è­‰ id_token
+    3. ç™¼æ”¾è‡ªå®¶ JWT
     """
-    # Step 1: ¥Î code ´« tokens¡]³o¨B»İ­n client_secret¡A¥u¯à¦b«áºİ°µ¡I¡^
+    # Step 1: ç”¨ code æ› tokensï¼ˆé€™æ­¥éœ€è¦ client_secretï¼Œåªèƒ½åœ¨å¾Œç«¯åšï¼ï¼‰
     tokens = exchange_code_for_tokens(request.code, request.redirect_uri)
 
-    # Step 2: ±q tokens ¤¤¨ú¥X id_token ¨ÃÅçÃÒ
+    # Step 2: å¾ tokens ä¸­å–å‡º id_token ä¸¦é©—è­‰
     google_id_token = tokens.get("id_token")
     if not google_id_token:
-        raise HTTPException(status_code=400, detail="Google ¥¼¦^¶Ç id_token")
+        raise HTTPException(status_code=400, detail="Google æœªå›å‚³ id_token")
 
     user_info = verify_google_id_token(google_id_token)
 
-    # Step 3: ¨ú±o¨Ï¥ÎªÌ¸ê°T
+    # Step 3: å–å¾—ä½¿ç”¨è€…è³‡è¨Š
     user_email = user_info.get("email")
     if not user_email:
-        raise HTTPException(status_code=400, detail="Google ±b¸¹¥¼´£¨Ñ Email")
+        raise HTTPException(status_code=400, detail="Google å¸³è™Ÿæœªæä¾› Email")
 
-    # Step 4: µo©ñ¦Û®a JWT
+    # Step 4: ç™¼æ”¾è‡ªå®¶ JWT
     access_token = create_access_token(data={"sub": user_email})
 
     return {
@@ -59,33 +59,33 @@ async def google_auth_with_code(request: CodeRequest):
             "email": user_email,
             "picture": user_info.get("picture")
         },
-        # ¥i¿ï¡G¤]¦^¶Ç Google ªº tokens¡AÅı«eºİ¥i¥H©I¥s Google API
+        # å¯é¸ï¼šä¹Ÿå›å‚³ Google çš„ tokensï¼Œè®“å‰ç«¯å¯ä»¥å‘¼å« Google API
         "google_access_token": tokens.get("access_token"),
     }
 
 
 # ============================================================
-# ¬[ºc B: Google Sign-In SDK Flow
-# - «eºİ¥Î Google SDK ª½±µ®³¨ì id_token
-# - ¸ûÂ²³æ¡A¾A¦X¯Â«eºİÀ³¥Î©Î§Ö³t¶}µo
+# æ¶æ§‹ B: Google Sign-In SDK Flow
+# - å‰ç«¯ç”¨ Google SDK ç›´æ¥æ‹¿åˆ° id_token
+# - è¼ƒç°¡å–®ï¼Œé©åˆç´”å‰ç«¯æ‡‰ç”¨æˆ–å¿«é€Ÿé–‹ç™¼
 # ============================================================
-@app.post("/auth/google", summary="[¬[ºcB] ¥Î ID Token ´«¨ú JWT")
+@app.post("/auth/google", summary="[æ¶æ§‹B] ç”¨ ID Token æ›å– JWT")
 async def google_auth(request: TokenRequest):
     """
-    ±µ¦¬«eºİ®³¨ìªº Google id_token¡AÅçÃÒ«áµo©ñ¥»¨t²Îªº JWT
+    æ¥æ”¶å‰ç«¯æ‹¿åˆ°çš„ Google id_tokenï¼Œé©—è­‰å¾Œç™¼æ”¾æœ¬ç³»çµ±çš„ JWT
     """
-    # Step A: ©I¥s google_oauth.py ÅçÃÒ¨­¤À
+    # Step A: å‘¼å« google_oauth.py é©—è­‰èº«åˆ†
     user_info = verify_google_id_token(request.id_token)
 
-    # Step B: ¨ú±o¨Ï¥ÎªÌ email (³q±`§@¬° User Unique ID)
+    # Step B: å–å¾—ä½¿ç”¨è€… email (é€šå¸¸ä½œç‚º User Unique ID)
     user_email = user_info.get("email")
     if not user_email:
-        raise HTTPException(status_code=400, detail="Google ±b¸¹¥¼´£¨Ñ Email")
+        raise HTTPException(status_code=400, detail="Google å¸³è™Ÿæœªæä¾› Email")
 
-    # Step C: (¥i¿ï) ¦b¦¹³BÀË¬d¸ê®Æ®w¡A­YµL¦¹¨Ï¥ÎªÌ«h·s¼W
+    # Step C: (å¯é¸) åœ¨æ­¤è™•æª¢æŸ¥è³‡æ–™åº«ï¼Œè‹¥ç„¡æ­¤ä½¿ç”¨è€…å‰‡æ–°å¢
     # user = db.query(User).filter(User.email == user_email).first()
 
-    # Step D: ©I¥s auth_utils.py Ã±µo¦Û®aªº Access Token
+    # Step D: å‘¼å« auth_utils.py ç°½ç™¼è‡ªå®¶çš„ Access Token
     access_token = create_access_token(data={"sub": user_email})
 
     return {
@@ -99,19 +99,19 @@ async def google_auth(request: TokenRequest):
     }
 
 
-# 2. ¨ü«OÅ@ªº¸ô¥Ñ (»İ­n JWT ¤~¯à¶i¤J)
-@app.get("/users/me", summary="¨ú±o·í«e¨Ï¥ÎªÌ¸ê°T")
+# 2. å—ä¿è­·çš„è·¯ç”± (éœ€è¦ JWT æ‰èƒ½é€²å…¥)
+@app.get("/users/me", summary="å–å¾—ç•¶å‰ä½¿ç”¨è€…è³‡è¨Š")
 async def read_users_me(current_user: str = Depends(get_current_user_email)):
     """
-    ¥u¦³¦b Header ±a¤W¦³®Äªº Authorization: Bearer <JWT> ¤~¯à¦s¨ú
+    åªæœ‰åœ¨ Header å¸¶ä¸Šæœ‰æ•ˆçš„ Authorization: Bearer <JWT> æ‰èƒ½å­˜å–
     """
     return {
-        "msg": "¦¨¥\³q¹L JWT ÅçÃÒ",
+        "msg": "æˆåŠŸé€šé JWT é©—è­‰",
         "user_email": current_user
     }
 
 
-# 3. ´ú¸Õ¥Î¤½¶}¸ô¥Ñ
+# 3. æ¸¬è©¦ç”¨å…¬é–‹è·¯ç”±
 @app.get("/")
 def root():
     return {"message": "Hello FastAPI OAuth Demo"}
