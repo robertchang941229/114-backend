@@ -1,4 +1,4 @@
-ï»¿import os
+import os
 import requests
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
@@ -9,32 +9,32 @@ GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 
 def verify_google_id_token(token: str):
-    """é©—è­‰å¾å‰ç«¯æˆ– Postman å‚³ä¾†çš„ Google ID Token"""
+    """ÅçÃÒ±q«eºİ©Î Postman ¶Ç¨Óªº Google ID Token"""
     try:
-        # é€™è£¡æœƒå»å‘ Google çš„ä¼ºæœå™¨é©—è­‰ token æ˜¯å¦åˆæ³•ã€éæœŸ
+        # ³o¸Ì·|¥h¦V Google ªº¦øªA¾¹ÅçÃÒ token ¬O§_¦Xªk¡B¹L´Á
         idinfo = id_token.verify_oauth2_token(
             token, google_requests.Request(), GOOGLE_CLIENT_ID
         )
-        # è¿”å› Google ä½¿ç”¨è€…è³‡è¨Š (email, name, sub...)
+        # ªğ¦^ Google ¨Ï¥ÎªÌ¸ê°T (email, name, sub...)
         return idinfo
     except ValueError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="ç„¡æ•ˆçš„ Google Token"
+            detail="µL®Äªº Google Token"
         )
 
 
 def exchange_code_for_tokens(code: str, redirect_uri: str) -> dict:
     """
-    [æ¶æ§‹ A] ç”¨ Authorization Code æ›å– tokens
+    [¬[ºc A] ¥Î Authorization Code ´«¨ú tokens
 
-    é€™å€‹å‹•ä½œå¿…é ˆåœ¨å¾Œç«¯åŸ·è¡Œï¼Œå› ç‚ºéœ€è¦ client_secretï¼
-    å‰ç«¯åªè² è²¬ï¼š1. å°å‘ Google  2. æ”¶åˆ° code  3. æŠŠ code å‚³çµ¦å¾Œç«¯
+    ³o­Ó°Ê§@¥²¶·¦b«áºİ°õ¦æ¡A¦]¬°»İ­n client_secret¡I
+    «eºİ¥u­t³d¡G1. ¾É¦V Google  2. ¦¬¨ì code  3. §â code ¶Çµ¹«áºİ
     """
     payload = {
         "code": code,
         "client_id": GOOGLE_CLIENT_ID,
-        "client_secret": GOOGLE_CLIENT_SECRET,  # âš ï¸ æ©Ÿå¯†ï¼åªèƒ½æ”¾å¾Œç«¯
+        "client_secret": GOOGLE_CLIENT_SECRET,  # ?? ¾÷±K¡I¥u¯à©ñ«áºİ
         "redirect_uri": redirect_uri,
         "grant_type": "authorization_code",
     }
@@ -44,7 +44,7 @@ def exchange_code_for_tokens(code: str, redirect_uri: str) -> dict:
     if response.status_code != 200:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"ç„¡æ³•æ›å– Token: {response.json().get('error_description', 'æœªçŸ¥éŒ¯èª¤')}"
+            detail=f"µLªk´«¨ú Token: {response.json().get('error_description', '¥¼ª¾¿ù»~')}"
         )
 
-    return response.json()  # åŒ…å« access_token, id_token, refresh_token
+    return response.json()  # ¥]§t access_token, id_token, refresh_token
