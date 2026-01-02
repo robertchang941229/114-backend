@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import os
 import requests
 from google.oauth2 import id_token
